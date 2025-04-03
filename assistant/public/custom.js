@@ -3,7 +3,7 @@ const appName = "PTX Assistant";
 
 // Messages
 const footerMsg = ["made with", "❤️", "by", "TeamPTXBuddy"];
-const disclaimer = "Generated Answer - check for important info.";
+const disclaimer = "Verify AI response for accuracy";
 
 // Node Selectors
 const classAIMessage = "ai-message";

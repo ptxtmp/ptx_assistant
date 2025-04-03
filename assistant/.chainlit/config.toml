@@ -107,34 +107,5 @@ custom_js = "/public/custom.js"
 #     icon_url = "https://avatars.githubusercontent.com/u/128686189?s=200&v=4"
 #     url = "https://github.com/Chainlit/chainlit/issues"
 
-# Paratext-inspired Light Theme
-[UI.theme.light]
-background = "#FAF1E6"  # Soft parchment-style background
-paper = "#F5E6D3"       # Aged manuscript tone
-
-    [UI.theme.light.primary]
-    main = "#6A8A3B"   # Paratext green
-    dark = "#3D5C1E"   # Dark forest green
-    light = "#A4C639"  # Brighter Paratext green accent
-
-    [UI.theme.light.text]
-    primary = "#2E3B1F"  # Deep greenish-black for text
-    secondary = "#5C7553" # Muted gray-green for subtext
-    highlight = "#D4A017" # Golden hue for important elements
-
-# Paratext-inspired Dark Theme
-[UI.theme.dark]
-background = "#1F2A16"  # Deep green-black
-paper = "#374024"      # Dark olive tone
-
-    [UI.theme.dark.primary]
-    main = "#A4C639"  # Paratext green highlight
-    light = "#D2E4A0" # Soft pastel green
-
-    [UI.theme.dark.text]
-    primary = "#E1E5C3"  # Light parchment for readability
-    secondary = "#B0B89C" # Muted gray-green for contrast
-    highlight = "#FFD700"  # Golden highlight for scripture refs
-
 [meta]
 generated_by = "2.4.400"

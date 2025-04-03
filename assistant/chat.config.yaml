@@ -12,7 +12,8 @@ system:
       name: &default_llm_model "Qwen/Qwen2.5-0.5B-Instruct"
       temperature: 0.8
     local_lms:
-      performance_mode: false
+      max_new_tokens: 1024
+      performance_mode: true
 
 settings: &default_settings
   - type: Slider

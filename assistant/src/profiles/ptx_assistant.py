@@ -1,20 +1,19 @@
 import json
 import mimetypes
 import os
-from typing import List, cast, Any, Optional, Union
+from typing import List, Any, Optional, Union
 
 import chainlit as cl
 from chainlit.element import ElementBased, Element
 from chainlit.types import AskFileResponse
-from config import AppConfig
-from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain.agents import initialize_agent, AgentType
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import Runnable
 from langchain_core.tools import tool
+
+from config import AppConfig
 from src.components.chat import ChatProfileHandler, ChatHistoryManager
 from src.components.solution import ToolWithSources
 from src.logger import log
@@ -234,6 +233,10 @@ class FileUploadHandler:
 class DocumentRetrieverTool(ToolWithSources):
     embedder: Optional[SentenceTransformerEmbeddings] = None
 
+    def __init__(self):
+        super().__init__()
+        self.sources = {}
+
     @staticmethod
     def set_embedder(config: AppConfig, vectorization_config: AppConfig):
         # Initialize SentenceTransformer with a high-quality model and local cache
@@ -308,14 +311,13 @@ class DocumentRetrieverTool(ToolWithSources):
 
         return processed_docs
 
-    def update_sources(self, event_output: list[dict]):
-        sources = {
-            res["source_name"]: res.get("content")
-            for i, res in enumerate(event_output)
-            if res.get("content")
-        }
-
-        self.sources = {**self.sources, **sources}
+    def update_sources(self, new_sources: dict):
+        """Update the sources with new information.
+        
+        Args:
+            new_sources: Dictionary mapping source names to their content
+        """
+        self.sources.update(new_sources)
 
 
 class PTXAssistant(ChatProfileHandler):
@@ -355,23 +357,21 @@ class PTXAssistant(ChatProfileHandler):
         # Initialize LLM model
         llm, _ = create_hugging_face_model(config=config)
 
-        # Define the prompt
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", profile_config.system_prompt),
-                MessagesPlaceholder("chat_history", optional=True),
-                ("human", profile_config.human_prompt),
-                MessagesPlaceholder("agent_scratchpad"),
-            ]
-        )
-
         # Define the toolkit
         toolkit = [DocumentRetrieverTool.get_tool()]
 
-        # Create the agent
-        # noinspection PyTypeChecker
-        agent = create_tool_calling_agent(llm, toolkit, prompt)
-        agent_executor = AgentExecutor(agent=agent, tools=toolkit, verbose=config.debug)
+        # Create a ReAct agent which works better with HuggingFacePipeline
+        agent_executor = initialize_agent(
+            tools=toolkit,
+            llm=llm,
+            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+            verbose=config.debug,
+            handle_parsing_errors=True,
+            return_intermediate_steps=True,
+            agent_kwargs={
+                "prefix": profile_config.system_prompt
+            }
+        )
 
         # Set the agent
         cl.user_session.set("agent", agent_executor)
@@ -448,49 +448,45 @@ class PTXAssistant(ChatProfileHandler):
         # Handle spontaneous file upload
         await PTXAssistant.handle_spontaneous_file_upload(question, config.chat_profiles.ptx_assistant)
 
-        # Get the chat history
-        chat_history = cl.user_session.get("chat_history")
-
         # Get the agent
-        runnable = cast(Runnable, cl.user_session.get("agent"))
-
-        # Get the limit answer
-        limit_current_answer = cl.user_session.get("limit_answer")
+        agent_executor = cl.user_session.get("agent")
 
         elements = []
         document_retriever = DocumentRetrieverTool()
 
         answer = cl.Message(content="", author=config.app_name)
-        async for event in runnable.astream_events(
-                {
-                    "question": question.content,
-                    "limit_answer_to_doc": limit_current_answer,
-                    "chat_history": chat_history,
-                },
-                version="v2",
-        ):
-            # type not enforced right now to avoid overhead during streaming
-            # from langchain_core.runnables.schema import StreamEvent
-            # event_casted = cast(StreamEvent, event)
-            # Improved version should only pass custom EventHandler class into stream
-            # https://github.com/Chainlit/cookbook/blob/90d540b72ebe7bbcda8d2fb8b41e8cdd23571da6/openai-data-analyst/app.py#L211
-            # Key Open Decision: Custom Agent Layer in Langchain vs. "Assistant" from AzureOpenAI and async_azure_openai_client.beta.threads.runs.stream()
 
-            kind = event["event"]
-            if kind == "on_chat_model_stream":
-                content = event["data"]["chunk"].content
-                if content:
-                    await answer.stream_token(content)
-            elif kind.startswith("on_tool_"):
-                await document_retriever.handle_tool_events(event)
+        # Simple inputs for ReAct agent
+        inputs = {
+            "input": question.content,
+        }
 
-        # Update chat history before sending the source information
+        try:
+            # Stream the agent's execution
+            async for chunk in agent_executor.astream(
+                    inputs,
+            ):
+                # Handle intermediate steps (tool executions)
+                if "intermediate_steps" in chunk:
+                    for action, tool_output in chunk["intermediate_steps"]:
+                        if isinstance(tool_output, list) and tool_output and action.tool == "chat_with_document":
+                            for item in tool_output:
+                                document_retriever.update_sources({item["source_name"]: item["content"]})
+
+                # Handle the streaming output
+                if "output" in chunk and chunk["output"]:
+                    await answer.stream_token(chunk["output"])
+        except Exception as e:
+            log.error(f"Error during agent execution: {str(e)}")
+            await answer.stream_token(f"\n\nI encountered an error while processing your request: {str(e)}")
+
+        # Update chat history
         ChatHistoryManager.update_chat_history(question, answer)
 
+        # Add source information
         sources = document_retriever.sources
         if sources:
             for url, content in sources.items():
-                # noinspection PyArgumentList
                 elements.append(cl.Text(content=content, name=url, display="side"))
 
             source_names = "\n".join([f" - {source}" for source in sorted(sources.keys())])

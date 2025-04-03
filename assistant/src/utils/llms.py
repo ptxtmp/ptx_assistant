@@ -3,11 +3,12 @@ import re
 
 import chainlit as cl
 import torch
-from config import AppConfig
 from langchain_community.llms import HuggingFacePipeline
 from langchain_openai import ChatOpenAI
-from src.logger import log
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+
+from config import AppConfig
+from src.logger import log
 
 
 def create_chat_openai_model(config: AppConfig) -> tuple[ChatOpenAI, dict]:
@@ -84,11 +85,12 @@ def create_hugging_face_model(config: AppConfig) -> tuple[HuggingFacePipeline, d
     }
 
     generation_kwargs = {
-        "do_sample": True,
+        "do_sample": performance_mode,
         "temperature": settings["Temperature"],
         "top_p": 0.9,
         "top_k": 50,
         "repetition_penalty": 1.1,
+        "max_new_tokens": config.system.models.local_lms.max_new_tokens,
         "use_cache": True,
     }
 
@@ -120,7 +122,7 @@ def create_hugging_face_model(config: AppConfig) -> tuple[HuggingFacePipeline, d
         log.info(f"Loading tokenizer from {tokenizer_path}...")
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
-    # Create text generation pipeline with function calling support
+    # Create text generation pipeline
     pipe = pipeline(
         "text-generation",
         model=model,
@@ -128,13 +130,10 @@ def create_hugging_face_model(config: AppConfig) -> tuple[HuggingFacePipeline, d
         **generation_kwargs
     )
 
-    # Create LangChain HuggingFacePipeline with function calling support
+    # Create LangChain HuggingFacePipeline
     llm = HuggingFacePipeline(
         pipeline=pipe,
-        model_kwargs={
-            "function_calling": True,
-            "tool_choice": "auto",
-        }
+        model_id=model_name,
     )
 
     return llm, settings

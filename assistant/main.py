@@ -24,32 +24,32 @@ async def set_chat_profiles(current_user: cl.User):
     return config.get_cl_chat_profile_list()
 
 
-@cl.oauth_callback
-async def oauth_callback(
-    provider_id: str,
-    token: str,
-    raw_user_data: Dict[str, str],
-    default_user: cl.User,
-) -> Optional[cl.User]:
-
-    log.debug(
-        f"\nprovider_id={provider_id},\ntoken={token},\nraw_user_data={raw_user_data},\ndefault_user={default_user}"
-    )
-
-    if provider_id == "google":
-        return default_user
-
-    # Send success message
-    await cl.Message(content="Successfully authenticated! Refreshing page...", author="System").send()
-
-    # Wait briefly for the message to be shown
-    await cl.sleep(3)
-
-    # Trigger page refresh
-    # noinspection PyArgumentList
-    await cl.Action(name="refresh", value="reload", script="window.location.reload();").send()
-
-    return None
+# @cl.oauth_callback
+# async def oauth_callback(
+#     provider_id: str,
+#     token: str,
+#     raw_user_data: Dict[str, str],
+#     default_user: cl.User,
+# ) -> Optional[cl.User]:
+#
+#     log.debug(
+#         f"\nprovider_id={provider_id},\ntoken={token},\nraw_user_data={raw_user_data},\ndefault_user={default_user}"
+#     )
+#
+#     if provider_id == "google":
+#         return default_user
+#
+#     # Send success message
+#     await cl.Message(content="Successfully authenticated! Refreshing page...", author="System").send()
+#
+#     # Wait briefly for the message to be shown
+#     await cl.sleep(3)
+#
+#     # Trigger page refresh
+#     # noinspection PyArgumentList
+#     await cl.Action(name="refresh", value="reload", script="window.location.reload();").send()
+#
+#     return None
 
 
 #######################################

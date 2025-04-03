@@ -1,0 +1,1 @@
+# This is a placeholder module for all Image utility functions

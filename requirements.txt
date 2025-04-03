@@ -1,0 +1,14 @@
+chainlit==1.1.306
+chromadb~=0.5.15
+langchain~=0.3.4
+langchain-core~=0.3.12
+langchain-openai~=0.2.3
+langchain-community~=0.3.3
+literalai~=0.0.607
+openai~=1.52.0
+pydantic~=2.9.2
+pypdf~=5.0.1
+python-dotenv~=1.0.1
+python_docx~=1.1.2
+python-pptx~=1.0.2
+PyYAML~=6.0.2

@@ -1,0 +1,61 @@
+/*Increase the size of the Logo*/
+.css-145bayk img {
+  max-height: 40px !important;
+}
+
+.css-1i3rg7m img {
+  max-height: 40px !important;
+}
+
+.css-14k6mw7 img {
+  max-height: 40px !important;
+}
+
+/* Replace the original Chainlit footer */
+.css-1705j0v {
+  display: flex;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  height: 100%;
+  visibility: visible !important;
+}
+
+/* Reduce page bottom padding */
+.css-mww0i9 {
+  padding-bottom: 10px !important;
+}
+
+/* Change the width of the Settings modal */
+.css-kfihhv {
+  width: 40em !important;
+}
+.css-17s34et {
+  width: 40em !important;
+}
+
+/* Step 1: Position parent element relatively */
+.MuiTypography-root.MuiTypography-body1.css-1e29bdn::after {
+  content: "";
+  /*Display: block; /* Ensures the text appears on a new line */
+  margin-top: 5px; /* Optional: Adds some space between the original text and the new text */
+  /* align-items: center; */
+  display: flex;
+  /*justify-content: center; */
+  font-size: 14px;
+  height: 100%;
+}
+
+/* Step 2: Add additional text with ::after */
+.MuiStack-root.css-mlggcq::after {
+  content: "Never trust facts that are not cited.";
+  font-size: 12px;
+  color: #666666;
+  position: absolute;
+  /* top: translateY(100%); */
+  top: clamp(30%, calc(30% + 20% * (100vw / 600)), 50%);
+  left: 50%;
+  transform: translate(-50%, 650%);
+}

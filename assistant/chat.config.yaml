@@ -1,0 +1,106 @@
+system:
+  chainlit:
+    debug: true
+    app_name: PTX Assistant
+    api_request:
+      max_retries: 5
+      retry_min_seconds: 1
+      retry_max_seconds: 5
+      timeout: 30
+    file_upload:
+      max_files: 3
+      max_size_mb: 10
+      allowed_file_formats:
+        - .txt
+        - .pdf
+        - .docx
+      accepted_mime_types:
+        - text/plain
+        - application/pdf
+        - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    vectorization:
+      batch_size: 16
+      text_splitter:
+        chunk_size: 1000
+        chunk_overlap: 10
+  models:
+    default:
+      name: &default_llm_model gpt-4o-mini
+      temperature: 1.0
+    openai:
+      api_key:
+        type: env
+        key: OPENAI_API_KEY
+
+settings: &default_settings
+  - type: Slider
+    options:
+      id: "Temperature"
+      label: "Temperature"
+      initial: 1
+      min: 0
+      max: 1
+      step: 0.1
+
+model_settings: &model_settings
+  - type: Select
+    options:
+      id: "Model"
+      label: "Model"
+      values:
+        - "gpt-4o-mini"
+        - "gpt-4o"
+      initial_value: *default_llm_model
+
+chat_profiles:
+
+  ptx_assistant:
+    name: "Demo Assistant"
+    active: true
+    handler_class: ptx_assistant.PTXAssistant
+    markdown_description: "This is a demo PTX Assistant that will a Bible translator with their daily workflow"
+    spontaneous_file_upload: true
+    ensure_session_vars:
+      - chat_history
+      - agent
+      - limit_answer
+    settings:
+      - type: Switch
+        options:
+          id: "limit_answer"
+          label: "Limit Answer to Document"
+          initial: false
+    system_prompt: |
+      You are an Assistant to retrieve knowledge from uploaded documents to answer questions.
+      Always include the source metadata for each fact you use in the response. Use square brackets to reference the source, e.g., *[role_library.pdf-1]*.
+      Properly format the output for human readability in markdown with new lines.
+    human_prompt: |
+      Special Instruction: {limit_answer_to_doc}
+
+      Question: {question}
+    conditional_prompt:
+      limit_answer_to_doc: |
+        Limit your answer ONLY to the provided context. You are not to entertain any questions from outside the context.
+      answer_without_limits: |
+        Try answering from the context. If context does not contain sufficient information, you are allowed to answer from your own knowledge.
+    starters: [ ]
+    file_upload:
+      prompt: "Hi {user}! Please upload up to {max_files} {file_formats} files of up to **{max_size}** MB to begin."
+      wrong_file_type_message: |
+        Uploaded file{file_name} not an allowed file type!
+        You are allowed to upload up to {max_files} {file_formats} files of up to **{max_size}** MB.
+      max_files: 3
+      max_size_mb: 10
+      allowed_file_formats:
+        - .txt
+        - .pdf
+        - .docx
+      accepted_mime_types:
+        - text/plain
+        - application/pdf
+        - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    vectorization:
+      batch_size: 16
+      text_splitter:
+        chunk_size: 1000
+        chunk_overlap: 10

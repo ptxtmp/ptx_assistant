@@ -5,13 +5,9 @@ import chainlit as cl
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 from literalai.helper import utc_now
-from literalai.step import TrueStepType
-
+from literalai.observability.step import TrueStepType
 from src.logger import log
 from src.utils.common import CustomJSONEncoder
-
-
-# from literalai.observability.step import TrueStepType
 
 
 class AutoFormattedStep(cl.Step):
@@ -76,7 +72,7 @@ class DualPurposeComponent(BaseTool):
     func: Union[Callable, Runnable]
 
     def __init__(
-        self, name: str, description: str, func: Union[Callable, Runnable], return_direct: bool = False
+            self, name: str, description: str, func: Union[Callable, Runnable], return_direct: bool = False
     ):
         super().__init__(
             name=name,
@@ -141,9 +137,9 @@ class ToolChain:
     """
 
     def __init__(
-        self,
-        name: str,
-        components: Union[BaseTool, list[BaseTool], dict[str, Union[BaseTool, list[BaseTool]]]],
+            self,
+            name: str,
+            components: Union[BaseTool, list[BaseTool], dict[str, Union[BaseTool, list[BaseTool]]]],
     ):
         self.name: str = name.replace(" ", "")
         self.components: Union[list[BaseTool], dict[str, Union[BaseTool, list[BaseTool]]]] = components
@@ -152,7 +148,7 @@ class ToolChain:
         """Async run method with Chainlit Steps"""
 
         async with AutoFormattedStep(
-            name=self.name, type="tool", input=initial_input, show_input=True
+                name=self.name, type="tool", input=initial_input, show_input=True
         ) as parent_step:
             # Refresh the step before begin
             parent_step.output = {"result": "Tool Chain execution in progress ..."}
@@ -182,7 +178,7 @@ class ToolChain:
                             current_output = await component.arun(current_output)
                         else:
                             async with AutoFormattedStep(
-                                name=component.name, type="tool", input=current_output, show_input=True
+                                    name=component.name, type="tool", input=current_output, show_input=True
                             ) as step:
                                 # Refresh the step before begin
                                 step.output = {"result": "Tool execution in progress ..."}

@@ -5,8 +5,11 @@
 # Python cache
 __pycache__/
 
-# Chainlit files
-.files/
-
 # Env file
 .env
+
+# Chainlit files
+.files/
+/assistant/.chainlit/*
+!/assistant/.chainlit/config.toml
+!/assistant/.chainlit/translations/en-US.json

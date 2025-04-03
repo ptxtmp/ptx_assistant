@@ -19,7 +19,7 @@ from src.components.chat import ChatProfileHandler, ChatHistoryManager
 from src.components.solution import ToolWithSources
 from src.logger import log
 from src.utils.common import format_list_for_msg
-from src.utils.llms import create_chat_openai_model
+from src.utils.llms import create_hugging_face_model
 from src.utils.text import read_text_from_file, chunk_text_async
 
 # Define the local cache directory for sentence transformer models
@@ -353,7 +353,7 @@ class PTXAssistant(ChatProfileHandler):
             await msg.update()
 
         # Initialize LLM model
-        llm, _ = create_chat_openai_model(config=config)
+        llm, _ = create_hugging_face_model(config=config)
 
         # Define the prompt
         prompt = ChatPromptTemplate.from_messages(
@@ -462,12 +462,12 @@ class PTXAssistant(ChatProfileHandler):
 
         answer = cl.Message(content="", author=config.app_name)
         async for event in runnable.astream_events(
-            {
-                "question": question.content,
-                "limit_answer_to_doc": limit_current_answer,
-                "chat_history": chat_history,
-            },
-            version="v2",
+                {
+                    "question": question.content,
+                    "limit_answer_to_doc": limit_current_answer,
+                    "chat_history": chat_history,
+                },
+                version="v2",
         ):
             # type not enforced right now to avoid overhead during streaming
             # from langchain_core.runnables.schema import StreamEvent

@@ -9,7 +9,7 @@ system:
       timeout: 30
   models:
     default:
-      name: &default_llm_model "Qwen/Qwen2.5-1.5B-Instruct"
+      name: &default_llm_model "Qwen/Qwen2.5-0.5B-Instruct"
       temperature: 0.8
     local_lms:
       performance_mode: false
@@ -40,7 +40,7 @@ chat_profiles:
     name: "Demo Assistant"
     active: true
     handler_class: ptx_assistant.PTXAssistant
-    markdown_description: "This is a demo PTX Assistant that will a Bible translator with their daily workflow"
+    markdown_description: "This is a demo PTX Assistant that will help a Bible translator with their daily workflow"
     spontaneous_file_upload: true
     ensure_session_vars:
       - chat_history

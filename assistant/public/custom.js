@@ -1,8 +1,8 @@
 // Global Constants
-const appName = "PTX_Assistant";
+const appName = "PTX Assistant";
 
 // Messages
-const footerMsg = ["made with", "❤️", "by", "Benison"];
+const footerMsg = ["made with", "❤️", "by", "TeamPTXBuddy"];
 const disclaimer = "Generated Answer - check for important info.";
 
 // Node Selectors

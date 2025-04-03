@@ -54,7 +54,7 @@ edit_message = true
 
 [UI]
 # Name of the Application
-name = "MyAI_Assistant"
+name = "PTX Assistant"
 
 # Description of the assistant. This is used for HTML tags.
 description = "An AI assistant assisting me in my personal tasks"
@@ -89,37 +89,39 @@ custom_js = "/public/custom.js"
 # custom_build = "./public/build"
 
 [UI.theme]
-    default = "light"
-    # layout = "wide"
-    #font_family = "Inter, sans-serif"
+default = "light"
+# layout = "wide"
+# font_family = "Palatino Linotype, Book Antiqua, serif"
 
-# Override default MUI light theme. (Check theme.ts)
+# Override default MUI light theme (Paratext-inspired).
 [UI.theme.light]
-    background = "#FFF8E7"
-    paper = "#F5E6D3"
+background = "#FAF1E6"  # Soft parchment color
+paper = "#F5E6D3"       # Aged manuscript feel
 
     [UI.theme.light.primary]
-        main = "#6F4E37"
-        dark = "#4A332A"
-        light = "#9B7653"
+    main = "#6F4E37"   # Rich coffee brown (earthy accent)
+    dark = "#4A332A"   # Deep brown for contrast
+    light = "#9B7653"  # Warm wood tone
 
     [UI.theme.light.text]
-        primary = "#3E2723"
-        secondary = "#795548"
+    primary = "#3E2723"   # Deep brown for easy reading
+    secondary = "#795548" # Softer brown for highlights
+    highlight = "#B8860B" # Golden hue for references
 
-# Override default MUI dark theme. (Check theme.ts)
+# Override default MUI dark theme (Low-light reading mode).
 [UI.theme.dark]
-    background = "#2C1E16"
-    paper = "#4A332A"
+background = "#2C1E16" # Dark sepia tone (eye comfort)
+paper = "#4A332A"      # Rich, warm brown
 
     [UI.theme.dark.primary]
-        main = "#D2B48C"
-        dark = "#A67B5B"
-        light = "#E6D2B5"
+    main = "#D2B48C"   # Soft tan (parchment-like)
+    dark = "#A67B5B"   # Warm, aged brown
+    light = "#E6D2B5"  # Creamy highlight
 
     [UI.theme.dark.text]
-        primary = "#F5E6D3"
-        secondary = "#D7CCC8"
+    primary = "#F5E6D3"  # Light parchment color for readability
+    secondary = "#D7CCC8" # Subtle, warm gray
+    highlight = "#FFD700" # Gold for key text accents
 
 [meta]
 generated_by = "1.2.0"

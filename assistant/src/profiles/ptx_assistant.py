@@ -64,7 +64,7 @@ class FileUploadHandler:
             self.files = await cl.AskFileMessage(
                 # f"Hi Max! Please upload up to 3 `.pdf` files up to **5** MB to begin.",
                 content=self.file_upload_conf.prompt.format(
-                    user=user.identifier,
+                    user=user.identifier if user and user.identifier else "User",
                     max_files=self.file_upload_conf.max_files,
                     file_formats=file_formats,
                     max_size=self.file_upload_conf.max_size_mb,
@@ -304,7 +304,7 @@ class PTXAssistant(ChatProfileHandler):
 
         settings: dict[str, Any] = await settings.send()
 
-        profile_config = config.chat_profiles.chat_with_doc
+        profile_config = config.chat_profiles.ptx_assistant
 
         file_upload_conf = profile_config.file_upload
         file_upload_conf["prompt"] = profile_config.file_upload.prompt
@@ -370,7 +370,7 @@ class PTXAssistant(ChatProfileHandler):
     @staticmethod
     async def settings_update(config: AppConfig, settings: dict):
 
-        profile_config = config.chat_profiles.chat_with_doc
+        profile_config = config.chat_profiles.ptx_assistant
 
         cl.user_session.set(
             "limit_answer",
@@ -420,7 +420,7 @@ class PTXAssistant(ChatProfileHandler):
     async def main(config: AppConfig, question: cl.Message):
 
         # Handle spontaneous file upload
-        await PTXAssistant.handle_spontaneous_file_upload(question, config.chat_profiles.chat_with_doc)
+        await PTXAssistant.handle_spontaneous_file_upload(question, config.chat_profiles.ptx_assistant)
 
         # Get the chat history
         chat_history = cl.user_session.get("chat_history")

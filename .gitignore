@@ -13,3 +13,4 @@ __pycache__/
 /assistant/.chainlit/*
 !/assistant/.chainlit/config.toml
 !/assistant/.chainlit/translations/en-US.json
+/assistant/models/

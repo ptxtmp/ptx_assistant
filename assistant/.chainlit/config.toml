@@ -33,24 +33,24 @@ edit_message = true
 
 # Authorize users to spontaneously upload files with messages
 [features.spontaneous_file_upload]
-    enabled = false
-    accept = ["*/*"]
-    max_files = 20
-    max_size_mb = 500
+enabled = false
+accept = ["*/*"]
+max_files = 20
+max_size_mb = 500
 
 [features.audio]
-    # Threshold for audio recording
-    min_decibels = -45
-    # Delay for the user to start speaking in MS
-    initial_silence_timeout = 3000
-    # Delay for the user to continue speaking in MS. If the user stops speaking for this duration, the recording will stop.
-    silence_timeout = 1500
-    # Above this duration (MS), the recording will forcefully stop.
-    max_duration = 15000
-    # Duration of the audio chunks in MS
-    chunk_duration = 1000
-    # Sample rate of the audio
-    sample_rate = 44100
+# Threshold for audio recording
+min_decibels = -45
+# Delay for the user to start speaking in MS
+initial_silence_timeout = 3000
+# Delay for the user to continue speaking in MS. If the user stops speaking for this duration, the recording will stop.
+silence_timeout = 1500
+# Above this duration (MS), the recording will forcefully stop.
+max_duration = 15000
+# Duration of the audio chunks in MS
+chunk_duration = 1000
+# Sample rate of the audio
+sample_rate = 44100
 
 [UI]
 # Name of the Application
@@ -93,35 +93,34 @@ default = "light"
 # layout = "wide"
 # font_family = "Palatino Linotype, Book Antiqua, serif"
 
-# Override default MUI light theme (Paratext-inspired).
+# Paratext-inspired Light Theme
 [UI.theme.light]
-background = "#FAF1E6"  # Soft parchment color
-paper = "#F5E6D3"       # Aged manuscript feel
+background = "#FAF1E6"  # Soft parchment-style background
+paper = "#F5E6D3"       # Aged manuscript tone
 
     [UI.theme.light.primary]
-    main = "#6F4E37"   # Rich coffee brown (earthy accent)
-    dark = "#4A332A"   # Deep brown for contrast
-    light = "#9B7653"  # Warm wood tone
+    main = "#6A8A3B"   # Paratext green
+    dark = "#3D5C1E"   # Dark forest green
+    light = "#A4C639"  # Brighter Paratext green accent
 
     [UI.theme.light.text]
-    primary = "#3E2723"   # Deep brown for easy reading
-    secondary = "#795548" # Softer brown for highlights
-    highlight = "#B8860B" # Golden hue for references
+    primary = "#2E3B1F"  # Deep greenish-black for text
+    secondary = "#5C7553" # Muted gray-green for subtext
+    highlight = "#D4A017" # Golden hue for important elements
 
-# Override default MUI dark theme (Low-light reading mode).
+# Paratext-inspired Dark Theme
 [UI.theme.dark]
-background = "#2C1E16" # Dark sepia tone (eye comfort)
-paper = "#4A332A"      # Rich, warm brown
+background = "#1F2A16"  # Deep green-black
+paper = "#374024"      # Dark olive tone
 
     [UI.theme.dark.primary]
-    main = "#D2B48C"   # Soft tan (parchment-like)
-    dark = "#A67B5B"   # Warm, aged brown
-    light = "#E6D2B5"  # Creamy highlight
+    main = "#A4C639"  # Paratext green highlight
+    light = "#D2E4A0" # Soft pastel green
 
     [UI.theme.dark.text]
-    primary = "#F5E6D3"  # Light parchment color for readability
-    secondary = "#D7CCC8" # Subtle, warm gray
-    highlight = "#FFD700" # Gold for key text accents
+    primary = "#E1E5C3"  # Light parchment for readability
+    secondary = "#B0B89C" # Muted gray-green for contrast
+    highlight = "#FFD700"  # Golden highlight for scripture refs
 
 [meta]
 generated_by = "1.2.0"

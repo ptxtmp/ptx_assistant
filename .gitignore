@@ -7,3 +7,6 @@ __pycache__/
 
 # Chainlit files
 .files/
+
+# Env file
+.env

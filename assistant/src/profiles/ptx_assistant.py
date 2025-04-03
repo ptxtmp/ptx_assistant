@@ -1,19 +1,20 @@
 import json
+import mimetypes
+import os
 from typing import List, cast, Any, Optional, Union
 
 import chainlit as cl
-from chainlit.element import ElementBased
+from chainlit.element import ElementBased, Element
 from chainlit.types import AskFileResponse
+from config import AppConfig
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable
 from langchain_core.tools import tool
-from langchain_openai import OpenAIEmbeddings
-
-from config import AppConfig
 from src.components.chat import ChatProfileHandler, ChatHistoryManager
 from src.components.solution import ToolWithSources
 from src.logger import log
@@ -21,14 +22,38 @@ from src.utils.common import format_list_for_msg
 from src.utils.llms import create_chat_openai_model
 from src.utils.text import read_text_from_file, chunk_text_async
 
+# Define the local cache directory for sentence transformer models
+MODEL_CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "models",
+                               "sentence_transformers")
+os.makedirs(MODEL_CACHE_DIR, exist_ok=True)
+
+
+class FileElement(Element):
+    """A chainlit Element class for handling files with path and mime attributes."""
+
+    type: str = "file"
+
+    def __init__(self, filepath: str):
+        self.path = filepath
+        self.name = os.path.basename(filepath)
+        self.mime = mimetypes.guess_type(filepath)[0]
+
+        super().__init__(
+            type=self.type,
+            name=self.name,
+            display="side",
+            mime=self.mime,
+            path=self.path
+        )
+
 
 class FileUploadHandler:
 
     def __init__(
-        self,
-        file_upload_config: AppConfig,
-        vectorization_config: AppConfig,
-        debug: bool = False,
+            self,
+            file_upload_config: AppConfig,
+            vectorization_config: AppConfig,
+            debug: bool = False,
     ):
 
         self.debug: bool = debug
@@ -104,7 +129,6 @@ class FileUploadHandler:
             if not isinstance(file, AskFileResponse) and file.mime and file.mime not in accepted_mime_types
         ]
         if invalid_files:
-
             file_formats = format_list_for_msg(self.file_upload_conf.allowed_file_formats)
             file_names = format_list_for_msg(
                 [file.name for file in invalid_files],
@@ -208,20 +232,18 @@ class FileUploadHandler:
 
 
 class DocumentRetrieverTool(ToolWithSources):
-
-    embedder: Optional[OpenAIEmbeddings] = None
+    embedder: Optional[SentenceTransformerEmbeddings] = None
 
     @staticmethod
     def set_embedder(config: AppConfig, vectorization_config: AppConfig):
-
-        chainlit = config.system.chainlit
-
-        DocumentRetrieverTool.embedder = OpenAIEmbeddings(
-            max_retries=chainlit.api_request.max_retries,
-            retry_min_seconds=chainlit.api_request.retry_min_seconds,
-            retry_max_seconds=chainlit.api_request.retry_max_seconds,
-            chunk_size=vectorization_config.batch_size,
-            timeout=chainlit.api_request.timeout,
+        # Initialize SentenceTransformer with a high-quality model and local cache
+        DocumentRetrieverTool.embedder = SentenceTransformerEmbeddings(
+            model_name="all-MiniLM-L6-v2",  # A good balance of quality and speed
+            cache_folder=MODEL_CACHE_DIR,  # Use local cache directory
+            model_kwargs={
+                "device": "cpu",  # Use GPU if available
+            },
+            encode_kwargs={"normalize_embeddings": True}  # Normalize embeddings for better similarity search
         )
 
     @staticmethod
@@ -277,7 +299,6 @@ class DocumentRetrieverTool(ToolWithSources):
         if retriever:
             docs: list[Document] = retriever.invoke(input=query)
             for idx, doc in enumerate(docs):
-
                 proc_doc = dict()
 
                 proc_doc["source_name"] = doc.metadata.get("source_name")
@@ -309,11 +330,16 @@ class PTXAssistant(ChatProfileHandler):
         file_upload_conf = profile_config.file_upload
         file_upload_conf["prompt"] = profile_config.file_upload.prompt
 
-        msg, files, processed_files_data = await FileUploadHandler(
+        file_upload_handler = FileUploadHandler(
             file_upload_config=file_upload_conf,
             vectorization_config=profile_config.vectorization,
             debug=config.debug,
-        ).run()
+        )
+
+        if profile_config.file_upload.preload_files:
+            file_upload_handler.files.extend([FileElement(f) for f in profile_config.file_upload.preload_files])
+
+        msg, files, processed_files_data = await file_upload_handler.run()
 
         DocumentRetrieverTool.init_tool(config, profile_config.vectorization, processed_files_data)
 
@@ -383,11 +409,11 @@ class PTXAssistant(ChatProfileHandler):
 
     @staticmethod
     async def handle_spontaneous_file_upload(
-        message: cl.Message, profile_config: AppConfig, debug: bool = False
+            message: cl.Message, profile_config: AppConfig, debug: bool = False
     ):
 
         if message.elements and any(
-            [isinstance(element, (cl.element.File, cl.element.Image)) for element in message.elements]
+                [isinstance(element, (cl.element.File, cl.element.Image)) for element in message.elements]
         ):
 
             file_upload_conf = profile_config.file_upload

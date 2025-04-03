@@ -10,9 +10,9 @@ system:
   models:
     default:
       name: &default_llm_model "Qwen/Qwen2.5-0.5B-Instruct"
-      temperature: 0.8
+      temperature: 0.9
     local_lms:
-      max_new_tokens: 1024
+      max_new_tokens: 512
       performance_mode: true
 
 settings: &default_settings
@@ -39,6 +39,25 @@ model_settings: &model_settings
 
 chat_profiles:
 
+  general:
+    name: "General Assistant"
+    active: true
+    handler_class: general.GeneralAssistant
+    markdown_description: "This is a general-purpose assistant to help with a variety of tasks and questions related to Bible translation."
+    spontaneous_file_upload: false
+    ensure_session_vars:
+      - model
+      - chat_history
+    settings:
+      - *model_settings
+      - *default_settings
+    system_prompt: |
+      You are a helpful assistant capable of answering a wide range of questions and performing various tasks.
+      Always provide accurate and concise information. Format your responses in markdown for better readability.
+    human_prompt: |
+      Question: {question}
+    starters: [ ]
+
   ptx_assistant:
     name: "Demo Assistant"
     active: true
@@ -50,6 +69,8 @@ chat_profiles:
       - agent
       - limit_answer
     settings:
+      - *model_settings
+      - *default_settings
       - type: Switch
         options:
           id: "limit_answer"

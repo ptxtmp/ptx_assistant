@@ -3,7 +3,7 @@ import re
 
 import chainlit as cl
 import torch
-from langchain_community.llms import HuggingFacePipeline
+from langchain_huggingface import HuggingFacePipeline
 from langchain_openai import ChatOpenAI
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
@@ -84,6 +84,7 @@ def create_hugging_face_model(config: AppConfig) -> tuple[HuggingFacePipeline, d
         "low_cpu_mem_usage": True,
     }
 
+    # Set generation parameters - these affect how the text is generated
     generation_kwargs = {
         "do_sample": performance_mode,
         "temperature": settings["Temperature"],
@@ -122,18 +123,20 @@ def create_hugging_face_model(config: AppConfig) -> tuple[HuggingFacePipeline, d
         log.info(f"Loading tokenizer from {tokenizer_path}...")
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
-    # Create text generation pipeline
+    # Create text generation pipeline with streaming capability
     pipe = pipeline(
         "text-generation",
         model=model,
         tokenizer=tokenizer,
+        # return_full_text=False,  # Don't return the prompt text in the output
         **generation_kwargs
     )
 
-    # Create LangChain HuggingFacePipeline
+    # Create LangChain HuggingFacePipeline with proper configuration for streaming
     llm = HuggingFacePipeline(
         pipeline=pipe,
         model_id=model_name,
+        model_kwargs={"stream": True}  # Enable streaming at the model level
     )
 
     return llm, settings

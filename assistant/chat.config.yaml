@@ -9,7 +9,7 @@ system:
       timeout: 30
   models:
     default:
-      name: &default_llm_model "Qwen/Qwen2.5-0.5B-Instruct"
+      name: &default_llm_model "microsoft/DialoGPT-large"
       temperature: 0.8
     local_lms:
       max_new_tokens: 1024
@@ -31,6 +31,7 @@ model_settings: &model_settings
       id: "Model"
       label: "Model"
       values:
+        - "microsoft/DialoGPT-large"
         - "Qwen/Qwen2.5-0.5B-Instruct"
         - "Qwen/Qwen2.5-1.5B-Instruct"
       initial_value: *default_llm_model

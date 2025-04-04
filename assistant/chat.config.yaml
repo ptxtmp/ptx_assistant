@@ -1,0 +1,111 @@
+system:
+  chainlit:
+    debug: true
+    app_name: PTX Assistant
+    api_request:
+      max_retries: 5
+      retry_min_seconds: 1
+      retry_max_seconds: 5
+      timeout: 30
+  models:
+    default:
+      name: &default_llm_model "Qwen/Qwen2.5-0.5B-Instruct"
+      temperature: &default_llm_temp 0.9
+    local_lms:
+      max_new_tokens: 512
+      performance_mode: true
+
+settings: &default_settings
+  - type: Slider
+    options:
+      id: "Temperature"
+      label: "Temperature"
+      initial: *default_llm_temp
+      min: 0
+      max: 1
+      step: 0.1
+
+model_settings: &model_settings
+  - type: Select
+    options:
+      id: "Model"
+      label: "Model"
+      values:
+        - "deepseek-ai/deepseek-coder-1.3b-instruct"
+        - "microsoft/DialoGPT-large"
+        - "Qwen/Qwen2.5-0.5B-Instruct"
+        - "Qwen/Qwen2.5-1.5B-Instruct"
+      initial_value: *default_llm_model
+
+chat_profiles:
+
+  general:
+    name: "General Assistant"
+    active: true
+    handler_class: general.GeneralAssistant
+    markdown_description: "This is a general-purpose assistant to help with a variety of tasks and questions related to Bible translation."
+    spontaneous_file_upload: false
+    ensure_session_vars:
+      - model
+      - chat_history
+    settings:
+      # - *model_settings
+      - *default_settings
+    system_prompt: |
+      You are a helpful assistant capable of helping with a variety of tasks and questions related to Bible translation. Always provide short and accurate response. If needed, format your responses in markdown for better readability.
+    human_prompt: |
+      Question: {question}
+    starters: [ ]
+
+  ptx_assistant:
+    name: "Demo Assistant"
+    active: true
+    handler_class: ptx_assistant.PTXAssistant
+    markdown_description: "This is a demo PTX Assistant that will help a Bible translator with their daily workflow"
+    spontaneous_file_upload: true
+    ensure_session_vars:
+      - chat_history
+      - agent
+      - limit_answer
+    settings:
+      # - *model_settings
+      - *default_settings
+      - type: Switch
+        options:
+          id: "limit_answer"
+          label: "Limit Answer to Document"
+          initial: false
+    system_prompt: |
+      You are a helpful assistant capable of helping with a variety of tasks and questions related to Bible translation. Always provide short and accurate response. Also include the source metadata for each fact you use in the response. Use square brackets to reference the source, e.g., *[role_library.pdf-1]*. If needed, format your responses in markdown for better readability.
+    human_prompt: |
+      Special Instruction: {limit_answer_to_doc}
+
+      Question: {question}
+    conditional_prompt:
+      limit_answer_to_doc: |
+        Limit your answer ONLY to the provided context. You are not to entertain any questions from outside the context.
+      answer_without_limits: |
+        Try answering from the context. If context does not contain sufficient information, you are allowed to answer from your own knowledge.
+    starters: [ ]
+    file_upload:
+      prompt: "Hi {user}! Please upload up to {max_files} {file_formats} files of up to **{max_size}** MB to begin."
+      preload_files: [ ]
+      #  - W:\\MyProjects\\ptx_slm\\aquifer_data\\consolidated.txt
+      wrong_file_type_message: |
+        Uploaded file{file_name} not an allowed file type!
+        You are allowed to upload up to {max_files} {file_formats} files of up to **{max_size}** MB.
+      max_files: 3
+      max_size_mb: 10
+      allowed_file_formats:
+        - .txt
+        - .pdf
+        - .docx
+      accepted_mime_types:
+        - text/plain
+        - application/pdf
+        - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    vectorization:
+      batch_size: 16
+      text_splitter:
+        chunk_size: 1000
+        chunk_overlap: 10

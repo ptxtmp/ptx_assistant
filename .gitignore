@@ -1,0 +1,16 @@
+# IDEs
+.idea/
+.vscode/
+
+# Python cache
+__pycache__/
+
+# Env file
+.env
+
+# Chainlit files
+.files/
+/assistant/.chainlit/*
+!/assistant/.chainlit/config.toml
+!/assistant/.chainlit/translations/en-US.json
+/assistant/models/

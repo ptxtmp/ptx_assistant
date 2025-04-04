@@ -220,6 +220,9 @@ class ChatHistoryManager:
         ChatHistoryManager.append_to_chat_history(time_info, "human")
         ChatHistoryManager.append_to_chat_history(latex_instruct, "human")
 
+        # TODO: To be removed
+        ChatHistoryManager.clear_chat_history()
+
     @staticmethod
     def instruct_latex_formatting():
         return (

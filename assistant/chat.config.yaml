@@ -89,8 +89,8 @@ chat_profiles:
     starters: [ ]
     file_upload:
       prompt: "Hi {user}! Please upload up to {max_files} {file_formats} files of up to **{max_size}** MB to begin."
-      preload_files:
-        - W:\\MyProjects\\ptx_slm\\aquifer_data\\consolidated.txt
+      preload_files: [ ]
+      #  - W:\\MyProjects\\ptx_slm\\aquifer_data\\consolidated.txt
       wrong_file_type_message: |
         Uploaded file{file_name} not an allowed file type!
         You are allowed to upload up to {max_files} {file_formats} files of up to **{max_size}** MB.

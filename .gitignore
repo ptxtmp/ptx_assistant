@@ -14,3 +14,12 @@ __pycache__/
 !/assistant/.chainlit/config.toml
 !/assistant/.chainlit/translations/en-US.json
 /assistant/models/
+
+# Temporary files
+temp*
+
+# Exclude models folder
+models/
+
+# ignroe .chainlit files
+.chainlit/

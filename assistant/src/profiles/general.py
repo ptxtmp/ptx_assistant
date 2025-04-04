@@ -28,11 +28,11 @@ class GeneralAssistant(ChatProfileHandler):
         # Initialize the language model
         llm, _ = create_hugging_face_model(config)
 
-        # Create the prompt template
+        # Create the prompt template - using a format that ChatHuggingFace will understand
         prompt = ChatPromptTemplate.from_messages([
             SystemMessage(content=profile_config.system_prompt),
             MessagesPlaceholder(variable_name="chat_history"),
-            HumanMessage(content="{input}")
+            ("human", "{input}")
         ])
 
         # Create the chain with streaming support

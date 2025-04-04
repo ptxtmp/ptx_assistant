@@ -1,5 +1,5 @@
 import chainlit as cl
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
@@ -59,18 +59,29 @@ class GeneralAssistant(ChatProfileHandler):
             await msg.send()
 
             # Stream the response
+            stream = False
+            full_message = ""
+            human_prefix = "Human:"
+            ai_prefix = "Assistant:"
             async for chunk in model.astream({
                 "chat_history": chat_history,
-                "input": user_message
+                "input": f"{human_prefix} {user_message}"
             }):
-                await msg.stream_token(chunk)
+                if stream:
+                    await msg.stream_token(chunk)
+                else:
+                    full_message += chunk
+                    if ai_prefix in full_message:
+                        full_message = full_message.split(ai_prefix)[1]
+                        await msg.stream_token(full_message)
+                        stream = True
 
             # Update the message
             await msg.update()
 
             # Update chat history with the complete message
             ChatHistoryManager.update_chat_history(message, msg)
-            
+
         except Exception as e:
             # Log the error and inform the user
             error_msg = f"An error occurred: {str(e)}"

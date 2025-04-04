@@ -66,7 +66,8 @@ def create_hugging_face_model(config: AppConfig) -> tuple[ChatHuggingFace, dict]
 
     # Determine device and optimization settings based on performance mode
     performance_mode = config.system.models.local_lms.performance_mode
-    device = torch.device("cuda" if performance_mode and torch.cuda.is_available() else "cpu")
+    device = "cuda" if performance_mode and torch.cuda.is_available() else "cpu"
+    log.info(f"Device set to use {device}")
 
     # Download and save model if it doesn't exist
     should_download = not os.path.exists(model_path)
@@ -74,16 +75,15 @@ def create_hugging_face_model(config: AppConfig) -> tuple[ChatHuggingFace, dict]
     # Create models directory if it doesn't exist
     os.makedirs(model_dir, exist_ok=True)
 
-    log.info(f"{'Downl' if should_download else 'L'}oading model to {model_path}...")
+    log.info(f"{'Downl' if should_download else 'L'}oading model {'to' if should_download else 'from'} {model_path}...")
     model = AutoModelForCausalLM.from_pretrained(
         model_name if should_download else model_path,
         torch_dtype=torch.float16 if performance_mode and torch.cuda.is_available() else torch.float32,
         device_map="auto" if performance_mode and torch.cuda.is_available() else None,
         low_cpu_mem_usage=True,
-    )
+    ).to(device)  # Explicitly move model to device
+
     tokenizer = AutoTokenizer.from_pretrained(model_name if should_download else model_path)
-    if device.type == "cpu":
-        model = model.to(device)
     if should_download:
         model.save_pretrained(model_path)
         tokenizer.save_pretrained(model_path)
@@ -104,22 +104,21 @@ def create_hugging_face_model(config: AppConfig) -> tuple[ChatHuggingFace, dict]
         "text-generation",
         model=model,
         tokenizer=tokenizer,
-        return_full_text=False,
-        **generation_kwargs
+        return_full_text=True,
+        **generation_kwargs,
     )
 
-    # Create HuggingFacePipeline with streaming
-    base_llm = HuggingFacePipeline(
+    # Create HuggingFacePipeline
+    llm = HuggingFacePipeline(
         pipeline=pipe,
-        model_id=model_path,
-        model_kwargs={"stream": True}
+        model_id=model_path
     )
 
     # Create ChatHuggingFace with the base llm
-    llm = ChatHuggingFace(
-        llm=base_llm,
-        human_prefix="Human:",
-        ai_prefix="Assistant:"
-    )
+    # llm = ChatHuggingFace(
+    #     llm=llm,
+    #     human_prefix="Human:",
+    #     ai_prefix="Assistant:",
+    # )
 
     return llm, settings

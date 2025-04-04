@@ -10,7 +10,7 @@ system:
   models:
     default:
       name: &default_llm_model "Qwen/Qwen2.5-0.5B-Instruct"
-      temperature: 0.9
+      temperature: &default_llm_temp 0.9
     local_lms:
       max_new_tokens: 512
       performance_mode: true
@@ -20,7 +20,7 @@ settings: &default_settings
     options:
       id: "Temperature"
       label: "Temperature"
-      initial: 1
+      initial: *default_llm_temp
       min: 0
       max: 1
       step: 0.1
@@ -49,11 +49,10 @@ chat_profiles:
       - model
       - chat_history
     settings:
-      - *model_settings
+      # - *model_settings
       - *default_settings
     system_prompt: |
-      You are a helpful assistant capable of answering a wide range of questions and performing various tasks.
-      Always provide accurate and concise information. Format your responses in markdown for better readability.
+      You are a helpful assistant capable of helping with a variety of tasks and questions related to Bible translation. Always provide short and accurate response. If needed, format your responses in markdown for better readability.
     human_prompt: |
       Question: {question}
     starters: [ ]
@@ -69,7 +68,7 @@ chat_profiles:
       - agent
       - limit_answer
     settings:
-      - *model_settings
+      # - *model_settings
       - *default_settings
       - type: Switch
         options:
@@ -77,9 +76,7 @@ chat_profiles:
           label: "Limit Answer to Document"
           initial: false
     system_prompt: |
-      You are an Assistant to retrieve knowledge from uploaded documents to answer questions.
-      Always include the source metadata for each fact you use in the response. Use square brackets to reference the source, e.g., *[role_library.pdf-1]*.
-      Properly format the output for human readability in markdown with new lines.
+      You are a helpful assistant capable of helping with a variety of tasks and questions related to Bible translation. Always provide short and accurate response. Also include the source metadata for each fact you use in the response. Use square brackets to reference the source, e.g., *[role_library.pdf-1]*. If needed, format your responses in markdown for better readability.
     human_prompt: |
       Special Instruction: {limit_answer_to_doc}
 

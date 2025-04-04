@@ -1,6 +1,6 @@
 # PTX Assistant - Chainlit App Setup Guide
 
-This guide will help you set up and run the PTX Assistant Chainlit application, a document-based question answering system.
+This guide will help you set up and run the PTX Assistant Chainlit application, a document-based question-answering system.
 
 ## Prerequisites
 
@@ -43,34 +43,24 @@ This guide will help you set up and run the PTX Assistant Chainlit application, 
 
 ## Configuration
 
-1. **Environment Variables**
-   Create a `.env` file in the `assistant` directory with the following variables:
-   ```
-   MODEL_PATH=path/to/your/model
-   CHAINLIT_PORT=8501
-   # Add other necessary environment variables
-   ```
-
-2. **Configuration Files**
    - `chat.config.yaml`: Contains chat configuration settings
-   - `config.py`: Main application configuration
+   - `.config\config.toml`: Chainlit-specific configuration
    - `chainlit.md`: Chainlit-specific documentation
 
 ## Project Structure
 ```
 ptx_assistant/
 ├── assistant/
-│   ├── src/              # Source code
-│   ├── models/           # Model files
-│   ├── public/           # Public assets
 │   ├── .chainlit/        # Chainlit configuration
-│   ├── .files/           # Application files
+│   ├── .files/           # Runtime Temporary files
+│   ├── src/              # Source code
+│   ├── models/           # Model downloads
+│   ├── public/           # Public assets
 │   ├── main.py           # Main application file
-│   ├── config.py         # Configuration file
-│   ├── chat.config.yaml  # Chat configuration
-│   └── .env              # Environment variables
+│   ├── config.py         # Configuration script (DO NOT MODIFY)
+│   └── chat.config.yaml  # Chat configuration
 ├── requirements.txt      # Python dependencies
-└── Dockerfile           # Container configuration
+└── Dockerfile            # Container configuration
 ```
 
 ## Running the Application
@@ -85,7 +75,7 @@ ptx_assistant/
 
 2. **Access the Application**
    - Open your web browser
-   - Navigate to `http://localhost:8501`
+   - Navigate to `http://localhost:8000`. Normally, it auto-opens in your default browser.
 
 ### Docker Deployment
 

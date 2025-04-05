@@ -84,7 +84,14 @@ class TransformersModel(LLM):
             self.tokenizer.save_pretrained(self.model_path)
 
     def unload(self):
+        # First, try to move model and tokenizer to CPU before deletion
         if self.model:
+            # noinspection PyBroadException
+            try:
+                # noinspection PyUnresolvedReferences
+                self.model = self.model.cpu()
+            except:
+                pass
             del self.model
             self.model = None
         if self.tokenizer:
@@ -93,11 +100,21 @@ class TransformersModel(LLM):
 
         # Force garbage collection
         import gc
-        gc.collect()
+        for _ in range(3):
+            gc.collect()
 
-        # Clear PyTorch's CUDA cache
+        # Clear PyTorch's CUDA cache and reset peak memory stats
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+            torch.cuda.reset_peak_memory_stats()
+
+            # Try to release any remaining CUDA memory
+            # noinspection PyBroadException
+            try:
+                import torch.cuda.memory as cuda_memory
+                cuda_memory.empty_cache()
+            except:
+                pass
 
     @property
     def _llm_type(self) -> str:

@@ -1,13 +1,9 @@
-import os
-import re
-
 import chainlit as cl
-import torch
-from langchain_huggingface import HuggingFacePipeline, ChatHuggingFace
+from langchain_core.language_models import BaseLLM
 from langchain_openai import ChatOpenAI
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 from config import AppConfig
+from src.components.model import TransformersModel
 from src.logger import log
 
 
@@ -45,7 +41,7 @@ def create_chat_openai_model(config: AppConfig) -> tuple[ChatOpenAI, dict]:
     )
 
 
-def create_hugging_face_model(config: AppConfig) -> tuple[ChatHuggingFace, dict]:
+def create_hugging_face_model(config: AppConfig) -> tuple[BaseLLM, dict]:
     """
     Creates an instance of ChatHuggingFace based on app config and chat settings.
     The model is downloaded and cached locally in a models directory.
@@ -58,67 +54,12 @@ def create_hugging_face_model(config: AppConfig) -> tuple[ChatHuggingFace, dict]
 
     # Create a directory name from the model name (replacing / with _)
     model_name = settings["Model"]
-    model_dir = os.path.join("models", re.sub(r'[^a-zA-Z0-9\-/]', '_', model_name))
-    model_dir = os.path.abspath(model_dir)
-
-    # Check if model files exist
-    model_path = os.path.join(model_dir)
-
-    # Determine device and optimization settings based on performance mode
-    performance_mode = config.system.models.local_lms.performance_mode
-    device = "cuda" if performance_mode and torch.cuda.is_available() else "cpu"
-    log.info(f"Device set to use {device}")
-
-    # Download and save model if it doesn't exist
-    should_download = not os.path.exists(model_path)
-
-    # Create models directory if it doesn't exist
-    os.makedirs(model_dir, exist_ok=True)
-
-    log.info(f"{'Downl' if should_download else 'L'}oading model {'to' if should_download else 'from'} {model_path}...")
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name if should_download else model_path,
-        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-        device_map="auto" if device == "cuda" else None,
-        low_cpu_mem_usage=True,
-    )
-
-    tokenizer = AutoTokenizer.from_pretrained(model_name if should_download else model_path)
-    if should_download:
-        model.save_pretrained(model_path)
-        tokenizer.save_pretrained(model_path)
-
     # Set generation parameters
-    generation_kwargs = {
-        "do_sample": False,
-        "temperature": float(settings["Temperature"]),
-        "top_p": 0.9,
-        "top_k": 50,
-        "repetition_penalty": 1.1,
-        "max_new_tokens": config.system.models.local_lms.max_new_tokens,
-        "use_cache": True,
-    }
+    generation_kwargs = config.system.models.local_lms.generation_kwargs
 
-    # Create the pipeline
-    pipe = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        return_full_text=True,
-        **generation_kwargs,
+    llm = TransformersModel(
+        model_name=model_name,
+        generation_kwargs=generation_kwargs,
     )
-
-    # Create HuggingFacePipeline
-    llm = HuggingFacePipeline(
-        pipeline=pipe,
-        model_id=model_path
-    )
-
-    # Create ChatHuggingFace with the base llm
-    # llm = ChatHuggingFace(
-    #     llm=llm,
-    #     human_prefix="Human:",
-    #     ai_prefix="Assistant:",
-    # )
 
     return llm, settings

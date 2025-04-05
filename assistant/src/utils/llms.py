@@ -78,10 +78,10 @@ def create_hugging_face_model(config: AppConfig) -> tuple[ChatHuggingFace, dict]
     log.info(f"{'Downl' if should_download else 'L'}oading model {'to' if should_download else 'from'} {model_path}...")
     model = AutoModelForCausalLM.from_pretrained(
         model_name if should_download else model_path,
-        torch_dtype=torch.float16 if performance_mode and torch.cuda.is_available() else torch.float32,
-        device_map="auto" if performance_mode and torch.cuda.is_available() else None,
+        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+        device_map="auto" if device == "cuda" else None,
         low_cpu_mem_usage=True,
-    ).to(device)  # Explicitly move model to device
+    )
 
     tokenizer = AutoTokenizer.from_pretrained(model_name if should_download else model_path)
     if should_download:
@@ -90,7 +90,7 @@ def create_hugging_face_model(config: AppConfig) -> tuple[ChatHuggingFace, dict]
 
     # Set generation parameters
     generation_kwargs = {
-        "do_sample": True,
+        "do_sample": False,
         "temperature": float(settings["Temperature"]),
         "top_p": 0.9,
         "top_k": 50,

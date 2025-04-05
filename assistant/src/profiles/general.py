@@ -4,6 +4,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from src.components.chat import ChatProfileHandler, ChatHistoryManager
+from src.components.model import TransformersModel
 from src.utils.llms import create_hugging_face_model
 
 
@@ -19,14 +20,26 @@ class GeneralAssistant(ChatProfileHandler):
 
         # Get the settings
         settings: dict = await settings.send()
-
-        profile_config = config.chat_profiles.general
+        await GeneralAssistant.settings_update(config, settings)
 
         # Initialize chat history
         ChatHistoryManager.init_chat_history()
 
-        # Initialize the language model
-        llm, _ = create_hugging_face_model(config)
+    @staticmethod
+    def unload_llm_model():
+        # Drop the model
+        prev_model: TransformersModel = cl.user_session.get("hf_llm")
+        if prev_model:
+            prev_model.unload()
+            del prev_model
+
+    @staticmethod
+    async def settings_update(config, settings: dict):
+        """Handle settings updates for the general chat."""
+
+        profile_config = config.chat_profiles.general
+
+        hf_llm, _ = create_hugging_face_model(config)
 
         # Create the prompt template - using a format that ChatHuggingFace will understand
         prompt = ChatPromptTemplate.from_messages([
@@ -36,10 +49,14 @@ class GeneralAssistant(ChatProfileHandler):
         ])
 
         # Create the chain with streaming support
-        chain = prompt | llm | StrOutputParser()
+        chain = prompt | hf_llm | StrOutputParser()
+
+        # Drop the model
+        GeneralAssistant.unload_llm_model()
 
         # Set the model
         cl.user_session.set("model", chain)
+        cl.user_session.set("hf_llm", hf_llm)
 
     @staticmethod
     async def main(config, message: cl.Message):
@@ -59,22 +76,11 @@ class GeneralAssistant(ChatProfileHandler):
             await msg.send()
 
             # Stream the response
-            stream = False
-            full_message = ""
-            human_prefix = "Human:"
-            ai_prefix = "Assistant:"
             async for chunk in model.astream({
                 "chat_history": chat_history,
-                "input": f"{human_prefix} {user_message}"
+                "input": user_message
             }):
-                if stream:
-                    await msg.stream_token(chunk)
-                else:
-                    full_message += chunk
-                    if ai_prefix in full_message:
-                        full_message = full_message.split(ai_prefix)[1]
-                        await msg.stream_token(full_message)
-                        stream = True
+                await msg.stream_token(chunk)
 
             # Update the message
             await msg.update()
@@ -89,12 +95,7 @@ class GeneralAssistant(ChatProfileHandler):
             raise
 
     @staticmethod
-    async def settings_update(config, settings: dict):
-        """Handle settings updates for the general chat."""
-        # Add any settings update logic here if needed
-        pass
-
-    @staticmethod
     async def end(config):
         """Clean up when the chat session ends."""
         ChatHistoryManager.clear_chat_history()
+        GeneralAssistant.unload_llm_model()

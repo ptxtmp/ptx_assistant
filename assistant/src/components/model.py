@@ -9,7 +9,7 @@ from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.llms.base import LLM
 from langchain.schema.messages import AIMessage, BaseMessage
 from langchain_core.language_models import LanguageModelInput
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
 
 from src.logger import log
@@ -308,7 +308,6 @@ class TransformersModel(LLM):
 
 # Example usage
 if __name__ == "__main__":
-    from langchain.schema import HumanMessage, SystemMessage
     from langchain.callbacks import StreamingStdOutCallbackHandler
 
     # Initialize the model

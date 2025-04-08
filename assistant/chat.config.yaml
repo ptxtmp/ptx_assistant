@@ -12,8 +12,16 @@ system:
       name: &default_llm_model "Qwen/Qwen2.5-0.5B-Instruct"
       temperature: &default_llm_temp 0.9
     local_lms:
-      max_new_tokens: 512
       performance_mode: true
+      generation_kwargs:
+        top_k: 50
+        top_p: 1.0
+        num_beams: 1
+        use_cache: true
+        do_sample: false
+        temperature: 1.0
+        max_new_tokens: 512
+        repetition_penalty: 1.0
 
 settings: &default_settings
   - type: Slider
@@ -49,7 +57,7 @@ chat_profiles:
       - model
       - chat_history
     settings:
-      # - *model_settings
+      - *model_settings
       - *default_settings
     system_prompt: |
       You are a helpful assistant capable of helping with a variety of tasks and questions related to Bible translation. Always provide short and accurate response. If needed, format your responses in markdown for better readability.
@@ -68,7 +76,7 @@ chat_profiles:
       - agent
       - limit_answer
     settings:
-      # - *model_settings
+      - *model_settings
       - *default_settings
       - type: Switch
         options:
